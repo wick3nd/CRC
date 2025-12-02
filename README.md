@@ -4,4 +4,4 @@ supported CRC algorithms:
 - CRC8 ATM-2
 - CRC16 CCITT
 - CRC32c (Catagnolli)
-- CRC32c (Catagnolli, streaming)
+- CRC32c (Catagnolli, streaming) - WIP
