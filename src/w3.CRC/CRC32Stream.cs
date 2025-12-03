@@ -40,7 +40,8 @@ namespace w3.CRC
                 int toRead = Math.Min(blockSize, count);
                 int read = _inner.Read(_buffer, 0, toRead);
 
-                if (read <= 0) break; int i = 0;
+                if (read <= 0) break;
+                int i = 0;
 
                 ref byte start = ref MemoryMarshal.GetReference(_buffer.AsSpan(0, read));
 
