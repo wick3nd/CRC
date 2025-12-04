@@ -5,6 +5,11 @@ namespace w3.CRC
 {
     public static class CRC16
     {
+        /// <summary>
+        /// Calculates a CRC16 CCITT
+        /// </summary>
+        /// <param name="data"> Input data</param>
+        /// <returns>A CRC16 number</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ComputeChecksum(ReadOnlySpan<byte> data)
         {
@@ -17,26 +22,23 @@ namespace w3.CRC
             int i = 0;
             for (; i <= len - 4; i += 4)
             {
-                crc = UpdateCrc(crc, Unsafe.Add(ref start, i));
-                crc = UpdateCrc(crc, Unsafe.Add(ref start, i + 1));
-                crc = UpdateCrc(crc, Unsafe.Add(ref start, i + 2));
-                crc = UpdateCrc(crc, Unsafe.Add(ref start, i + 3));
+                crc = (ushort)(crc << 8 ^ PrecomputedTables.CCITTTable[(crc >> 8 ^ Unsafe.Add(ref start, i)) & 0xFF]);
+                crc = (ushort)(crc << 8 ^ PrecomputedTables.CCITTTable[(crc >> 8 ^ Unsafe.Add(ref start, i + 1)) & 0xFF]);
+                crc = (ushort)(crc << 8 ^ PrecomputedTables.CCITTTable[(crc >> 8 ^ Unsafe.Add(ref start, i + 2)) & 0xFF]);
+                crc = (ushort)(crc << 8 ^ PrecomputedTables.CCITTTable[(crc >> 8 ^ Unsafe.Add(ref start, i + 3)) & 0xFF]);
             }
 
             // handle remaining bytes
-            for (; i < len; i++) crc = UpdateCrc(crc, Unsafe.Add(ref start, i));
+            for (; i < len; i++) crc = (ushort)(crc << 8 ^ PrecomputedTables.CCITTTable[(crc >> 8 ^ Unsafe.Add(ref start, i)) & 0xFF]);
 
             return crc;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ushort UpdateCrc(ushort crc, byte b)
-        {
-            int index = (crc >> 8 ^ b) & 0xFF;
-
-            return (ushort)(crc << 8 ^ PrecomputedTables.CCITTTable[index]);
-        }
-
+        /// <summary>
+        /// Checks if the data is valid
+        /// </summary>
+        /// <param name="dataWithCRC"> Data with CRC</param>
+        /// <returns>A bool signalizing if the CRC is valid</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Validate(ReadOnlySpan<byte> dataWithCRC)
         {

@@ -10,12 +10,19 @@ namespace w3.CRC
 
         private byte[]? _buffer;
 
-        public CRC32Stream(Stream inner)
+        public CRC32Stream(Stream inStream)
         {
-            if (!inner.CanSeek) throw new NotSupportedException("The stream is not seekable.");
-            _inner = inner;
+            if (!inStream.CanSeek || !inStream.CanRead) throw new NotSupportedException("The stream is not seekable or readable.");
+            _inner = inStream;
         }
 
+        /// <summary>
+        /// Computes a CRC32c
+        /// </summary>
+        /// <param name="blockSize"> Size of the internal buffer that holds the data</param>
+        /// <param name="offset"> Offset from the beginning of the file</param>
+        /// <param name="count"> Number of Bytes to process</param>
+        /// <returns>CRC32c number</returns>
         public uint ComputeChecksum(int blockSize, int offset, int count)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(blockSize);
@@ -37,11 +44,10 @@ namespace w3.CRC
         private uint ComputeIntelCRCStream(int count)
         {
             uint crc = 0xFFFFFFFF;
-            int remaining = count;
 
-            while (remaining > 0)
+            while (count > 0)
             {
-                int toRead = Math.Min(_buffer!.Length, remaining);
+                int toRead = Math.Min(_buffer!.Length, count);
                 int read = _inner.Read(_buffer, 0, toRead);
 
                 if (read <= 0) break;
@@ -59,7 +65,7 @@ namespace w3.CRC
                     i++;
                 }
 
-                remaining -= read;
+                count -= read;
             }
 
             return ~crc;
@@ -68,11 +74,10 @@ namespace w3.CRC
         private uint ComputeAmdCRCStream(int count)
         {
             uint crc = 0xFFFFFFFF;
-            int remaining = count;
 
-            while (remaining > 0)
+            while (count > 0)
             {
-                int toRead = Math.Min(_buffer!.Length, remaining);
+                int toRead = Math.Min(_buffer!.Length, count);
                 int read = _inner.Read(_buffer, 0, toRead);
 
                 if (read <= 0) break;
@@ -90,48 +95,54 @@ namespace w3.CRC
                     i++;
                 }
 
-                remaining -= read;
+                count -= read;
             }
 
             return ~crc;
         }
 
-       // Inferior
-       /*
-        private uint ComputeCustomCRCStream(int count)
-        {
-            uint crc = 0xFFFFFFFF;
-            int remaining = count;
+        // Inferior
+        /*
+         private uint ComputeCustomCRCStream(int count)
+         {
+             uint crc = 0xFFFFFFFF;
+             int remaining = count;
 
-            while (remaining > 0)
-            {
-                int toRead = Math.Min(_buffer!.Length, remaining);
-                int read = _inner.Read(_buffer, 0, toRead);
+             while (remaining > 0)
+             {
+                 int toRead = Math.Min(_buffer!.Length, remaining);
+                 int read = _inner.Read(_buffer, 0, toRead);
 
-                if (read <= 0) break;
+                 if (read <= 0) break;
 
-                int i = 0;
-                ref byte start = ref MemoryMarshal.GetReference(_buffer.AsSpan(0, read));
+                 int i = 0;
+                 ref byte start = ref MemoryMarshal.GetReference(_buffer.AsSpan(0, read));
 
-                while (i + 4 <= read)
-                {
-                    crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i))] ^ (crc >> 8);
-                    crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i + 1))] ^ (crc >> 8);
-                    crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i + 2))] ^ (crc >> 8);
-                    crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i + 3))] ^ (crc >> 8);
-                    i += 4;
-                }
+                 while (i + 4 <= read)
+                 {
+                     crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i))] ^ (crc >> 8);
+                     crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i + 1))] ^ (crc >> 8);
+                     crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i + 2))] ^ (crc >> 8);
+                     crc = PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i + 3))] ^ (crc >> 8);
+                     i += 4;
+                 }
 
-                for (; i < read; i++) crc = (crc >> 8) ^ PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i))];
+                 for (; i < read; i++) crc = (crc >> 8) ^ PrecomputedTables.CatagnolliTable[(byte)(crc ^ Unsafe.Add(ref start, i))];
 
-                remaining -= read;
-            }
+                 remaining -= read;
+             }
 
-            return ~crc;
-        }
-       */
+             return ~crc;
+         }
+        */
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// Checks if the data is valid
+        /// </summary>
+        /// <param name="blockSize"> Size of the internal buffer that holds the data</param>
+        /// <param name="offset"> Offset from the beginning of the file</param>
+        /// <param name="count"> Number of Bytes to process</param>
+        /// <returns>A bool signalizing if the CRC is valid</returns>
         public bool Validate(int blockSize, int offset, int count)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(blockSize);

@@ -5,6 +5,11 @@ namespace w3.CRC
 {
     public class CRC8
     {
+        /// <summary>
+        /// Calculates a CRC16 CCITT
+        /// </summary>
+        /// <param name="data"> Input data</param>
+        /// <returns>A CRC16 number</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ComputeChecksum(ReadOnlySpan<byte> data)
         {
@@ -16,6 +21,11 @@ namespace w3.CRC
             return crc;
         }
 
+        /// <summary>
+        /// Checks if the data is valid
+        /// </summary>
+        /// <param name="dataWithCRC"> Data with CRC</param>
+        /// <returns>A bool signalizing if the CRC is valid</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Validate(ReadOnlySpan<byte> dataWithCRC)
         {
