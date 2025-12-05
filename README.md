@@ -1,4 +1,5 @@
 # w3.CRC - a simple to use CRC library
+`dotnet add package w3.CRC --version 1.0.0`
 
 ## Supported CRC algorithms (atm):
 - CRC8 ATM-2
