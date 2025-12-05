@@ -21,7 +21,9 @@ bool isValid = CRC8.Validate(dataWithCRC);
 ```
 
 ## CRC32Stream
-The CRC32Stream is different as it uses streams as inputs instead of byte arrays to save memory space when calculating the CRC. The calculation is as follows:
+The CRC32Stream is different as it uses streams as inputs instead of byte arrays to save memory space when calculating the CRC.
+
+The calculation is as follows:
 ```C#
 var crcStream = new CRC32Stream(inputStream);
 uint crc = crcStream.ComputeChecksum(8192, 0, (int)crcStream.Length);
