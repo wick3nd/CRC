@@ -8,7 +8,6 @@
 
 
 ## CRC8, CRC16 and CRC32
-Recommended for data with less than 256B
 
 The CRC calculation is as follows:
 ```C#
